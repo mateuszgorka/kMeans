@@ -130,9 +130,7 @@ def visualize(data, labels, centroids, it=None):
     ax.set_zlabel('Cecha 3')
 
 
-    ax.set_title(
-        f'Wizualizacja centroidów i przypisanych punktów - Iteracja {it}' if it is not None else 'Wizualizacja centroidów i przypisanych punktów')
-
+    ax.set_title('Wizualizacja centroidów i przypisanych punktów')
     ax.legend()
     plt.show()
 
