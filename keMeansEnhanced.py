@@ -1,24 +1,25 @@
 import math
+
+import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
-# Pakiet: kmeans (nazwa symboliczna – nie ma pakietów w Pythonie w ten sam sposób)
 
-# Wczytanie danych z pliku iris.data
+
 def load_data(filename):
-    """Wczytuje dane z pliku iris.data, uwzględniając etykiety klas."""
     data = pd.read_csv(filename, header=None)
-    return data.iloc[:, :-1].values, data.iloc[:, -1].values  # Pobieramy cechy + etykiety klas
+    return data.iloc[:, :-1].values, data.iloc[:, -1].values  # --> tuuuutaj cechy + etykiety klas!
 
-# Stałe do testów
+
 MAX_ITERS = 100
 TOLERANCE = 1e-4
 
 
 def main():
     filename = "data/iris.data"
-    data, labels_orig = load_data(filename)  # Pobranie danych i etykiet
+    data, labels_orig = load_data(filename)
 
-    k = int(input("Podaj liczbę klastrów (k): "))  # Pobranie wartości k od użytkownika
+    k = int(input("Podaj k: "))
     labels, centroids = k_means(data, k, MAX_ITERS, TOLERANCE)
 
     print("\nSkład grup:")
@@ -27,6 +28,9 @@ def main():
         print(f"\nKlaster {i} ({len(cluster_points)} elementów):")
         for point, name in cluster_points:
             print(f"  {point} -> {name}")
+
+
+    visualize(data, labels, centroids)
 
 
 def k_means(data, k, max_iter, tolerance):
@@ -43,18 +47,23 @@ def k_means(data, k, max_iter, tolerance):
          klastra, do którego został przypisany data[i].
     """
 
-    centroids = data[:k]  
+    centroids = data[:k]  # ->>> Wybieramy pierwsze k punktów jako poczatkowe centroidy
     labels = [0] * len(data)
 
     for iter in range(max_iter):
-        clusters = [[] for _ in range(k)] 
-        new_labels = []  
+        clusters = [[] for _ in range(k)]       # pusciutka lista dla kazdego z k klastrow
+        new_labels = []                         # a tutaj numerow klastrów
         
         for p in data:
-            distance = [dist(p, centroid) for centroid in centroids]  
+            distance = [dist(p, centroid) for centroid in centroids]   # czyli wywolujemy distance od danegoo (p) punktu i centroidu
             closest_ones = distance.index(min(distance))
-            clusters[closest_ones].append(p)  
-            new_labels.append(closest_ones)  
+            clusters[closest_ones].append(p)                           # dodaaaaaaaajemy punkty do klastra z najblizszym indexem
+            new_labels.append(closest_ones)                            # a tu mega luz bo same indexy chcemy
+
+
+        # teraz bedziemy obliczac nowe centroidy
+        # srednia arytmetyczna punktow w klastrze
+        # ale nie mozemy tego zrobic w prosty hardcodeowy sposob
 
        
         centroid_changed = []
@@ -64,13 +73,24 @@ def k_means(data, k, max_iter, tolerance):
 
             centroid_changed.append([sum(dim) / len(cl) for dim in zip(*cl)])
 
+            # zip dziala w taki sposob ze gdy mamy
+            # cl = [(1, 2), (3, 4), (5, 6)] to automatyczie dostajemy podzbiory (1,2,3)(2,4,6)
+            # dla dwoch prosto mo mozna zrobuc meanX i meanY ale dla wielu blizej nieokreslonych najlepsza opcja
+            # w tym momencie pi prostu sumujemy wartosci ktore wyciagamy z arraya zip(ktore wyciaga cl czyli te wektory)
+
+
         
-        change_iteration = [dist(centroids[i], centroid_changed[i]) for i in range(k)]
-        
+        change_iteration = [dist(centroids[i], centroid_changed[i]) for i in range(k)]  ### lista z dystansami od pierwotnego centroidu do nowego centroidu [|\]
+                                                                                        # czyli mamy nie wiem (1,3,6) i pierwotne (1,3)
+        # Aktualizacje
+        # ------------
+
         centroids = centroid_changed
         labels = new_labels
 
-        total_distance = sum(dist(data[j], centroids[labels[j]]) for j in range(len(data)))
+        # -----------
+
+        total_distance = sum(dist(data[j], centroids[labels[j]]) for j in range(len(data)))   #### caaalkowity dystans do przypisanych dla nich centroidow
 
         print(f"Iteracja {iter + 1}: {total_distance:.2f}")  
 
@@ -81,9 +101,40 @@ def k_means(data, k, max_iter, tolerance):
 
 
 def dist(p, q):
-    """Odległość euklidesowa w N-wymiarach."""
+    ### odleglosc euklidesowa
+
     return math.sqrt(sum((px - qx) ** 2 for px, qx in zip(p, q)))
 
+
+def visualize(data, labels, centroids, it=None):
+    fig = plt.figure(figsize=(10, 10))
+    ax = fig.add_subplot(111, projection='3d')
+
+    colormaps = ['b', 'g', 'r']
+
+    for i in range(len(centroids)):
+        clusters = [data[j] for j in range(len(data)) if labels[j] == i]
+        clusters = np.array(clusters)
+
+
+        ax.scatter(clusters[:, 0], clusters[:, 1], clusters[:, 2], color=colormaps[i % len(colormaps)],
+                   label=f'Klaster {i}')
+
+
+    centroids = np.array(centroids)
+    ax.scatter(centroids[:, 0], centroids[:, 1], centroids[:, 2], color='black', marker='X', s=100, label='Centroidy')
+
+
+    ax.set_xlabel('Cecha 1')
+    ax.set_ylabel('Cecha 2')
+    ax.set_zlabel('Cecha 3')
+
+
+    ax.set_title(
+        f'Wizualizacja centroidów i przypisanych punktów - Iteracja {it}' if it is not None else 'Wizualizacja centroidów i przypisanych punktów')
+
+    ax.legend()
+    plt.show()
 
 if __name__ == "__main__":
     main()
