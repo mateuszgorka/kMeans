@@ -20,7 +20,7 @@ def main():
     for k in K_VALUES:
         labels = k_means(DATASET, k, MAX_ITERS, TOLERANCE)
         self_check(labels, k)
-    print("Gratulacje – wszystkie testy zakończyły się sukcesem!")
+    print("Gratulacje - wszystkie testy zakończyły się sukcesem!")
 
 
 def k_means(data, k, max_iter, tolerance):
@@ -33,22 +33,83 @@ def k_means(data, k, max_iter, tolerance):
       3. Oblicz nowe centroidy jako średnią arytmetyczną punktów w klastrze.
       4. Powtarzaj kroki 2-3, aż klastry przestaną się zmieniać, centroidy
          przesuną się mniej niż `tolerance`, lub osiągnięto `maxIter` iteracji.
-      5. Zwróć tablicę etykiet (wartości 0…k-1) – labels[i] to numer
+      5. Zwróć tablicę etykiet (wartości 0…k-1) - labels[i] to numer
          klastra, do którego został przypisany data[i].
 
-    Możesz – ale nie musisz – dopisać metody pomocnicze w tej klasie.
+    Możesz - ale nie musisz - dopisać metody pomocnicze w tej klasie.
     Nie modyfikuj sygnatury ani nazwy tej metody. Możesz korzystać z publicznej metody dist().
     """
     # ---------------------------------------------------------------------------------
-    # TODO: Twoja implementacja tutaj
+    
+    centroids = data[:k]  # Wybieramy pierwsze k punktów jako poczatkowe centroidy 
+    label = [0] * len(data)
+
+
+    for iter in range(max_iter):    
+        clusters = [[] for _ in range(k)]       # pusciutka lista dla kazdego z k klastrow
+        new_label = []                              # a tutaj numerow klastrów 
+
+        # i przypisujemy mordeczki 
+
+        for p in data:
+            distance = [dist(p, centroid) for centroid in centroids]  # czyli wywolujemy distance od danegoo (p) punktu i centroidu ()
+            closest_ones = distance.index(min(distance))
+            clusters[closest_ones].append(p)  # dodaaaaaaaajemy punkty do klastra z najblizszym indexem 
+            new_label.append(closest_ones)   # zapisujemy mordy
+
+
+        # teraz bedziemy obliczac nowe centroidy 
+        # srednia arytmetyczna punktow w klastrze
+
+
+
+
+        # - pamietaj wez pod uwage to ze klaster moze byc pusty -> Pusty klaster (k=2, klaster=1) – upewnij się, że inicjalizacja jest poprawna.
+
+
+        centroid_changed = []
+        for cl in clusters:
+            if len(cl) == 0:
+                raise ValueError("Pusty klaster")
+
+            mean_x = sum(p[0] for p in cl) / len(cl)      # dziala to tak ze zalozmy ze klaster ma cluster = [[1.0, 1.0], [1.2, 1.0], [0.9, 1.1]]  dodajemy wszystkie x w tym przypadku 1.0+1.2+0.9/len(3)
+            mean_y = sum(p[1] for p in cl) / len(cl)
+            centroid_changed.append([mean_x, mean_y])
+
+        # sprawdzamy czy centroidy sie przesunely bla bla (w sensie czy nie okazalo sie ze jeden z 3 warunkow sie spelnil)
+
+
+        change_iteration = [dist(centroids[i], centroid_changed[i]) for i in range(k)] ### dystans od pierwotnego centroidu do nowego centroidu [|\]
+        
+        centroids = centroid_changed  # przypisujemy do tych zwyklych te zmienione (i dalej leeci forek)
+        label = new_label
+
+
+
+        if max(change_iteration) < tolerance:  # flaga mordeczko do zatrzymania fora najwieksza zmiana w tablicy musi byc mniejsza niz tolerancja ! 
+            break
+
+        # Zwróć tablicę etykiet (wartości 0…k-1) – labels[i] to numer
+        # klastra, do którego został przypisany data[i].
+    
+
+        total_distance = 0
+        for i, point in enumerate(data):
+            total_distance += dist(point, centroids[label[i]])
+        
+        print(f"Iteracja {iter + 1}: {total_distance:.2f}")
+
+
+
     # ---------------------------------------------------------------------------------
-    return None
+    return label
 
 
 def dist(p, q):
     """Odległość euklidesowa w 2D."""
     dx = p[0] - q[0]
     dy = p[1] - q[1]
+    
     return math.sqrt(dx * dx + dy * dy)
 
 
